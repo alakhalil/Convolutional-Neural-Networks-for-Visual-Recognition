@@ -2,6 +2,9 @@ from __future__ import print_function
 
 import numpy as np
 import matplotlib.pyplot as plt
+from .softmax import softmax_loss_vectorized
+from .softmax import dscore
+
 
 class TwoLayerNet(object):
   """
@@ -61,7 +64,7 @@ class TwoLayerNet(object):
     - loss: Loss (data loss and regularization loss) for this batch of training
       samples.
     - grads: Dictionary mapping parameter names to gradients of those parameters
-      with respect to the loss function; has the same keys as self.params.
+      with respect to the loss function; has the sam5re keys as self.params.
     """
     # Unpack variables from the params dictionary
     W1, b1 = self.params['W1'], self.params['b1']
@@ -70,6 +73,12 @@ class TwoLayerNet(object):
 
     # Compute the forward pass
     scores = None
+    fully_connected1  = np.dot(X,W1)+b1 # dimensions: (N,H)
+    hidden_Relu = np.maximum(0,fully_connected1) #dimensions: (N,H)
+    scores = np.dot(hidden_Relu,W2)+ b2 # (N,C)
+    
+    
+    
     #############################################################################
     # TODO: Perform the forward pass, computing the class scores for the input. #
     # Store the result in the scores variable, which should be an array of      #
@@ -86,6 +95,10 @@ class TwoLayerNet(object):
 
     # Compute the loss
     loss = None
+    
+    loss, dW2 = softmax_loss_vectorized(W2, hidden_Relu,y,reg,b2)
+    
+    
     #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
     # both the data loss and L2 regularization for W1 and W2. Store the result  #
@@ -99,6 +112,23 @@ class TwoLayerNet(object):
 
     # Backward pass: compute gradients
     grads = {}
+    dummy, dscores = dscore(W2, hidden_Relu,y,reg,b2)
+    
+    dhidden_Relu = np.dot(dscores,W2.T)
+    db1 = np.sum(dhidden_Relu,axis=0,keepdims=True) 
+   
+    db2 = np.sum(dscores,axis=0,keepdims=True)
+    
+    dhidden_Relu[hidden_Relu<=0] = 0
+    
+    dfully_connected1 = dhidden_Relu
+    
+    dW1 = np.dot(X.T,dfully_connected1)
+    
+    grads['W1'] = dW1
+    grads['W2'] = dW2
+    grads['b1'] = db1
+    grads['b2'] = db2 
     #############################################################################
     # TODO: Compute the backward pass, computing the derivatives of the weights #
     # and biases. Store the results in the grads dictionary. For example,       #
