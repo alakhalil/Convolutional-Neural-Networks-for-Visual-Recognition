@@ -64,27 +64,36 @@ def softmax_loss_naive(W, X, y, reg):
 
   return loss, dW
 
+def dscore(W,X,y,reg,b=None):
+    
+  loss = 0.0
+  
+  scores = np.dot(X,W) + b #calculate scores
+  
+  scores = scores-np.max(scores,axis=1,keepdims=True) #subtract maximamum
+  e = np.exp(scores) #raise scores as power of exponential
+  probabilities = e / np.sum(e,axis=1,keepdims=True)  # divide by sum to get probabilities <=1 and >=0
+  regularization_term = reg* np.sum(np.square(W)) 
+  loss = (np.sum(-1*np.log(probabilities[range(X.shape[0]),y])) / X.shape[0] ) + regularization_term #loss function
+  
+  one_or_zero = np.zeros_like(probabilities)
+  one_or_zero[range(one_or_zero.shape[0]),y] = 1 
+  dscores = probabilities-one_or_zero #dL/dscores
+  return loss, dscores
+  
 
-def softmax_loss_vectorized(W, X, y, reg):
+def softmax_loss_vectorized(W, X, y, reg,b=None):
   """
   Softmax loss function, vectorized version.
 
   Inputs and outputs are the same as softmax_loss_naive.
   """
   # Initialize the loss and gradient to zero.
-  loss = 0.0
+  
+  b=np.zeros((1,W.shape[1]))
+  
+  loss, dscores = dscore(W,X,y,reg,b)
   dW = np.zeros_like(W)
-  
-  scores = np.dot(X,W) #calculate scores
-  scores = scores-np.max(scores,axis=1).reshape(-1,1) #subtract maximamum
-  e = np.exp(scores) #raise scores as power of exponential
-  probabilities = e / np.sum(e,axis=1)[:,None]  # divide by sum to get probabilities <=1 and >=0
-  regularization_term = reg* np.sum(W**2) 
-  loss = np.sum(-1*np.log(probabilities[range(y.shape[0]),y])) / y.shape[0]  + regularization_term #loss function
-  
-  one_or_zero = np.zeros_like(probabilities)
-  one_or_zero[range(one_or_zero.shape[0]),y] = 1 
-  dscores = probabilities-one_or_zero #dL/dscores
   dW = np.dot(X.T,dscores)  #dL/dW = dL/dscores * dscores/dW = X.T x dL/dscores 
   dW /= X.shape[0] #average
   dW+=reg*W
