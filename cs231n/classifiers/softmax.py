@@ -73,11 +73,12 @@ def dscore(W,X,y,reg,b=None):
   scores = scores-np.max(scores,axis=1,keepdims=True) #subtract maximamum
   e = np.exp(scores) #raise scores as power of exponential
   probabilities = e / np.sum(e,axis=1,keepdims=True)  # divide by sum to get probabilities <=1 and >=0
-  regularization_term = reg* np.sum(np.square(W)) 
+  regularization_term = 0.5*reg* np.sum(W*W) ##0.5???
   loss = (np.sum(-1*np.log(probabilities[range(X.shape[0]),y])) / X.shape[0] ) + regularization_term #loss function
   
   one_or_zero = np.zeros_like(probabilities)
-  one_or_zero[range(one_or_zero.shape[0]),y] = 1 
+  one_or_zero[range(one_or_zero.shape[0]),y] = 1.0 
+ 
   dscores = probabilities-one_or_zero #dL/dscores
   return loss, dscores
   
@@ -93,10 +94,16 @@ def softmax_loss_vectorized(W, X, y, reg,b=None):
   b=np.zeros((1,W.shape[1]))
   
   loss, dscores = dscore(W,X,y,reg,b)
+  
+
+
   dW = np.zeros_like(W)
   dW = np.dot(X.T,dscores)  #dL/dW = dL/dscores * dscores/dW = X.T x dL/dscores 
+  
   dW /= X.shape[0] #average
+  
   dW+=reg*W
+  
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
   # Store the loss in loss and the gradient in dW. If you are not careful     #

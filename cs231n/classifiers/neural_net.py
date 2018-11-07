@@ -72,7 +72,7 @@ class TwoLayerNet(object):
     N, D = X.shape
 
     # Compute the forward pass
-    scores = None
+   
     fully_connected1  = np.dot(X,W1)+b1 # dimensions: (N,H)
     hidden_Relu = np.maximum(0,fully_connected1) #dimensions: (N,H)
     scores = np.dot(hidden_Relu,W2)+ b2 # (N,C)
@@ -97,6 +97,7 @@ class TwoLayerNet(object):
     loss = None
     
     loss, dW2 = softmax_loss_vectorized(W2, hidden_Relu,y,reg,b2)
+    loss+=0.5*reg*np.sum(W1*W1)
     
     
     #############################################################################
@@ -123,7 +124,9 @@ class TwoLayerNet(object):
     
     dfully_connected1 = dhidden_Relu
     
-    dW1 = np.dot(X.T,dfully_connected1)
+    dW1 = np.dot(X.T,dfully_connected1) 
+    print(dW1)
+    
     
     grads['W1'] = dW1
     grads['W2'] = dW2
