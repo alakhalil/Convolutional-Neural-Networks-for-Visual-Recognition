@@ -23,28 +23,25 @@ def softmax_loss_naive(W, X, y, reg):
   loss = 0.0
   dW = np.zeros_like(W)
   
-  N = y.shape[0] #number of instances
+  N = X.shape[0] #number of instances
   C = W.shape[1] #number of classes
   #D = W.shape[0]
   ##### calculationg total loss ##########
-  probabilities = np.zeros((N,C))
+  
   for i in range(N):
       #row_probabilities_sum = 0.0 #sum of probabilites of given instance
       scores_i = np.dot(X[i],W)#calculates scores 
       scores_i -= np.max(scores_i) #for number stability in order not to divide to large numbers
       
-      probabilities[i] = np.exp(scores_i)
-      
-      probabilities[i] /= np.sum(probabilities[i])
-      loss+=-1*np.log(probabilities[i,y[i]]) #loss function
+      probability = lambda c: np.exp(scores_i[c])/np.sum(np.exp(scores_i))
       
       
-          
-
-  for j in range(C):
-      
-      dW[:,j]  = np.dot(X.T,probabilities[:,j] - y==j) 
-      
+      loss-=np.log(probability(y[i])) #loss function        
+  
+      for c in range(C):
+          p_c = probability(c)
+          dW[:,c]  += (p_c-(c==y[i]))*X[i]
+  
   loss /= N  #averaging
   loss+=reg*np.sum(W**2) #adding regularization term
   dW /= N
@@ -73,7 +70,7 @@ def dscore(W,X,y,reg,b=None):
   scores = scores-np.max(scores,axis=1,keepdims=True) #subtract maximamum
   e = np.exp(scores) #raise scores as power of exponential
   probabilities = e / np.sum(e,axis=1,keepdims=True)  # divide by sum to get probabilities <=1 and >=0
-  regularization_term = 0.5*reg* np.sum(W*W) ##0.5???
+  regularization_term = reg* np.sum(W**2) 
   loss = (np.sum(-1*np.log(probabilities[range(X.shape[0]),y])) / X.shape[0] ) + regularization_term #loss function
   
   one_or_zero = np.zeros_like(probabilities)

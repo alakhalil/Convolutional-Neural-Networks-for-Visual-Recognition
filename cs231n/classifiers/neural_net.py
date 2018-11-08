@@ -97,7 +97,7 @@ class TwoLayerNet(object):
     loss = None
     
     loss, dW2 = softmax_loss_vectorized(W2, hidden_Relu,y,reg,b2)
-    loss+=0.5*reg*np.sum(W1*W1)
+    loss+=0.5*reg*np.sum(W1**2) - 0.5*reg*np.sum(W2**2)
     
     
     #############################################################################
@@ -125,7 +125,7 @@ class TwoLayerNet(object):
     dfully_connected1 = dhidden_Relu
     
     dW1 = np.dot(X.T,dfully_connected1) 
-    print(dW1)
+  
     
     
     grads['W1'] = dW1
