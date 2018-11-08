@@ -61,8 +61,8 @@ def softmax_loss_naive(W, X, y, reg):
 
   return loss, dW
 
-def dscore(W,X,y,reg,b=None):
-    
+def dscore(W,X,y,reg,b):
+  #method that dscores
   loss = 0.0
   
   scores = np.dot(X,W) + b #calculate scores
@@ -73,12 +73,9 @@ def dscore(W,X,y,reg,b=None):
   regularization_term = reg* np.sum(W**2) 
   loss = (np.sum(-1*np.log(probabilities[range(X.shape[0]),y])) / X.shape[0] ) + regularization_term #loss function
   
-  one_or_zero = np.zeros_like(probabilities)
-  one_or_zero[range(one_or_zero.shape[0]),y] = 1.0 
- 
-  dscores = probabilities-one_or_zero #dL/dscores
-  return loss, dscores
-  
+  dscores = probabilities
+  dscores[np.arange(X.shape[0]),y]-=1 #probabilities -1(i=y)
+  return loss,dscores       
 
 def softmax_loss_vectorized(W, X, y, reg,b=None):
   """
@@ -87,9 +84,8 @@ def softmax_loss_vectorized(W, X, y, reg,b=None):
   Inputs and outputs are the same as softmax_loss_naive.
   """
   # Initialize the loss and gradient to zero.
-  
-  b=np.zeros((1,W.shape[1]))
-  
+  if b is None:
+      b = np.zeros(W.shape[1])
   loss, dscores = dscore(W,X,y,reg,b)
   
 
@@ -99,7 +95,7 @@ def softmax_loss_vectorized(W, X, y, reg,b=None):
   
   dW /= X.shape[0] #average
   
-  dW+=reg*W
+  dW+=reg*W #regularization
   
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #

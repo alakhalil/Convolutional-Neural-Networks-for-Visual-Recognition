@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from .softmax import softmax_loss_vectorized
 from .softmax import dscore
-
+from .softmax import softmax_loss_naive
 
 class TwoLayerNet(object):
   """
@@ -70,12 +70,13 @@ class TwoLayerNet(object):
     W1, b1 = self.params['W1'], self.params['b1']
     W2, b2 = self.params['W2'], self.params['b2']
     N, D = X.shape
-
-    # Compute the forward pass
    
-    fully_connected1  = np.dot(X,W1)+b1 # dimensions: (N,H)
-    hidden_Relu = np.maximum(0,fully_connected1) #dimensions: (N,H)
-    scores = np.dot(hidden_Relu,W2)+ b2 # (N,C)
+    # Compute the forward pass
+    
+    fully_connected1  = np.dot(X,W1)+b1 # dimensions: (N,H) 
+    hidden_Relu = fully_connected1 #dimensions: (N,H) 
+    hidden_Relu[hidden_Relu<=0]=0  #max(0,fully_connected) Relu function
+    scores = np.dot(hidden_Relu,W2)+ b2 # (N,C) result of 2nd fully connected layer
     
     
     
@@ -96,11 +97,10 @@ class TwoLayerNet(object):
     # Compute the loss
     loss = None
     
-    loss, dW2 = softmax_loss_vectorized(W2, hidden_Relu,y,reg,b2)
-    loss+=0.5*reg*np.sum(W1**2) - 0.5*reg*np.sum(W2**2)
-    
-    
-    #############################################################################
+    loss, dW2 = softmax_loss_vectorized(W2, hidden_Relu,y,reg,b2) #input to softmax is Relu result
+    loss+=reg*(np.sum(W1**2)) #regularization
+    dW2 += reg*(W2) #regularization
+   #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
     # both the data loss and L2 regularization for W1 and W2. Store the result  #
     # in the variable loss, which should be a scalar. Use the Softmax           #
@@ -114,24 +114,36 @@ class TwoLayerNet(object):
     # Backward pass: compute gradients
     grads = {}
     dummy, dscores = dscore(W2, hidden_Relu,y,reg,b2)
+   
     
     dhidden_Relu = np.dot(dscores,W2.T)
-    db1 = np.sum(dhidden_Relu,axis=0,keepdims=True) 
-   
-    db2 = np.sum(dscores,axis=0,keepdims=True)
+    
+    db2 = np.sum(dscores,axis=0)
+    
+    db2 /= N #regularization
+    db2+=reg*b2 #regularization
+    
     
     dhidden_Relu[hidden_Relu<=0] = 0
     
+    
+    
+    
     dfully_connected1 = dhidden_Relu
     
-    dW1 = np.dot(X.T,dfully_connected1) 
-  
+    db1 = np.sum(dfully_connected1,axis=0) 
+    db1/= N#regularization
+    db1+= reg*(b1)#regularization
+    
+    dW1 = np.dot(X.T,dfully_connected1)/N+ 2*reg*(W1)
+    
+    
     
     
     grads['W1'] = dW1
     grads['W2'] = dW2
     grads['b1'] = db1
-    grads['b2'] = db2 
+    grads['b2'] = db2
     #############################################################################
     # TODO: Compute the backward pass, computing the derivatives of the weights #
     # and biases. Store the results in the grads dictionary. For example,       #
@@ -181,7 +193,9 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      pass
+      indecies =np.random.choice(num_train,batch_size)
+      X_batch= X[indecies,:]
+      y_batch= y[indecies]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -196,7 +210,10 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-      pass
+      self.params['W1'] += - learning_rate * grads['W1']
+      self.params['W2'] += - learning_rate * grads['W2'] 
+      self.params['b1'] += - learning_rate * grads['b1'].ravel()
+      self.params['b2'] += - learning_rate * grads['b2'].ravel()
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
@@ -241,7 +258,11 @@ class TwoLayerNet(object):
     ###########################################################################
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
-    pass
+    fully_connected1  = np.dot(X,self.params['W1'])+self.params['b1'] # dimensions: (N,H)
+    hidden_Relu = np.maximum(0,fully_connected1) #dimensions: (N,H)
+    scores = np.dot(hidden_Relu,self.params['W2'])+ self.params['b2'] # (N,C)
+    y_pred=np.argmax(scores, axis=1)
+    #y_pred= np.argmax(np.dot(np.maximum(0,np.dot(X,self.params['W1'])+self.params['b1'])),self.params['W2'])+ self.params['b1'], axis=1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################
