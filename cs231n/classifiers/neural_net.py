@@ -130,7 +130,8 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    grads['W1'] += 2*reg*W1
+    grads['W2'] += 2*reg*W2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -174,7 +175,7 @@ class TwoLayerNet(object):
       # TODO: Create a random minibatch of training data and labels, storing  #
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
-      indecies =np.random.choice(num_train,batch_size)
+      indecies =np.random.choice(np.arange(num_train),batch_size)
       X_batch= X[indecies,:]
       y_batch= y[indecies]
       #########################################################################
